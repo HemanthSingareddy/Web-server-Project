@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assignment</title>  
+</head>
+<body>
+<nav class="menu-bar">
+    <div class="dropdown"><button><b>File</b></button>
+        <div class="dropdown-content">
+            <a href="">New</a>
+            <a href="">Open</a>
+            <a href="">Save</a>
+            <a href="">Print</a>
+            <a href="">Close</a>
+        </div>
+    </div>
+    <div class="dropdown1">
+    <div class="dropdown">
+        <button>Edit</button>
+        <div class="dropdown-content">
+            <a href="">Undo</a>
+            <a href="">Redo</a>
+            <a href="">Cut</a>
+            <a href="">Copy</a>
+            <a href="">Paste</a>
+            <a href="">Delete</a>
+            <a href="">Select All</a>
+        </div>
+        </div>
+    </div>
+    <div class="dropdown"><button><b>View</b></button>
+        <div class="dropdown-content">
+            <a href="">Zoom In</a>
+            <a href="">Zoom Out</a>
+            <a href="">Actual Size</a>
+            <a href="">Fit Page</a>
+            <a href="">Fit Width</a>
+            <a href="">Fit Height</a>
+            <a href="">Rotate Left</a>
+            <a href="">Rotate Right</a>
+            <a href="">Full Screen</a>
+        </div>
+    </div>
+</nav>
+    <style>
+        body{
+            margin: 0px;
+            background-color: hsl(97, 100%, 96%);
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        .menu-bar {
+            background-color: hsl(119, 72%, 35%);
+            display: flex;
+        }
+        button{
+                background-color: hsl(119, 72%, 35%);
+                color:hsl(0, 0%, 0%) ;
+                padding: 10px 15px;
+                border: none;
+                cursor: pointer;
+                width: 100px;
+        }
+        .dropdown a{
+            display: block;
+            background-color: hsl(100, 68%, 44%);
+            color: black;
+            text-decoration: none;
+                padding: 10px 15px;
+        }
+        .dropdown .dropdown-content{
+            display: none;
+            background-color: hsl(100, 68%, 44%);
+            position: absolute;
+            width: 100px;
+            margin: 0px;
+        }
+.dropdown:hover .dropdown-content{
+    display: flex;
+    flex-direction: column;
+}
+button:hover{
+    background-color: hsl(100, 68%, 44%);
+}
+.dropdown a:hover{
+    background-color: hsl(100, 91%, 57%);
+}
+.container1{
+    margin: 40px;
+    padding: 10px;
+    background-color: hsl(0, 0%, 100%);
+    border-left: 5px solid hsl(119, 72%, 35%);
+    
+}
+.container{
+    margin: 40px;
+    padding: 10px;
+    background-color: hsl(0, 0%, 100%);
+    border-left: 5px solid yellow;
+}
+.dropdown1:focus-within .dropdown-content{
+    display:block
+}
+    </style>
+
+    <div class="container1">
+    <h3>Instructions</h3>
+    <P>
+        Recreate this page using only CSS. Do yourself a favor and 1) Do not view the source. Figure it out yourself. 2) Do not search for the solution. Learn CSS until you know enough to do this.
+    </P>
+    </div>
+    <div class="container">
+    <h3>Extra Credit</h3>
+    <P>
+        Notice how the Edit menu (besides for not being bold) reacts to clicks. If you click the edit menu, it remains open until you click somewhere else. (This you might need to search for)
+    </P>
+</div>
+    </body>
+</html>
