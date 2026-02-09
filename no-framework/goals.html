@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Goals - FitTrack</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="nav-brand">
+                <h1>💪 FitTrack</h1>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="dashboard.html">Dashboard</a></li>
+                <li><a href="progress.html">Progress</a></li>
+                <li><a href="goals.html" class="active">Goals</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="container">
+        <h2>Your Fitness Goals</h2>
+
+        <div class="goal-section">
+            <h3>Active Goals</h3>
+            
+            <div class="goal-card">
+                <div class="goal-header">
+                    <h4>🏃 Run 50km This Month</h4>
+                    <span class="goal-status active">In Progress</span>
+                </div>
+                <div class="goal-progress-container">
+                    <div class="goal-progress-bar">
+                        <div class="goal-progress-fill" style="width: 72%;"></div>
+                    </div>
+                    <span class="goal-percentage">72% Complete (36/50 km)</span>
+                </div>
+                <div class="goal-details">
+                    <p>📅 Started: February 1, 2026</p>
+                    <p>🎯 Target Date: February 28, 2026</p>
+                    <p>💪 Keep it up! You're ahead of schedule!</p>
+                </div>
+            </div>
+
+            <div class="goal-card">
+                <div class="goal-header">
+                    <h4>💪 Workout 5 Days Per Week</h4>
+                    <span class="goal-status active">In Progress</span>
+                </div>
+                <div class="goal-progress-container">
+                    <div class="goal-progress-bar">
+                        <div class="goal-progress-fill" style="width: 100%;"></div>
+                    </div>
+                    <span class="goal-percentage">100% Complete (5/5 days this week)</span>
+                </div>
+                <div class="goal-details">
+                    <p>📅 Started: January 15, 2026</p>
+                    <p>🎯 Ongoing Weekly Goal</p>
+                    <p>🎉 Excellent work this week!</p>
+                </div>
+            </div>
+
+            <div class="goal-card">
+                <div class="goal-header">
+                    <h4>🔥 Burn 10,000 Calories This Month</h4>
+                    <span class="goal-status active">In Progress</span>
+                </div>
+                <div class="goal-progress-container">
+                    <div class="goal-progress-bar">
+                        <div class="goal-progress-fill" style="width: 68%;"></div>
+                    </div>
+                    <span class="goal-percentage">68% Complete (6,800/10,000 cal)</span>
+                </div>
+                <div class="goal-details">
+                    <p>📅 Started: February 1, 2026</p>
+                    <p>🎯 Target Date: February 28, 2026</p>
+                    <p>💪 You're on track to reach your goal!</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="goal-section">
+            <h3>Completed Goals</h3>
+            
+            <div class="goal-card completed">
+                <div class="goal-header">
+                    <h4>🏆 Complete 15 Workouts in January</h4>
+                    <span class="goal-status completed">Completed</span>
+                </div>
+                <div class="goal-progress-container">
+                    <div class="goal-progress-bar">
+                        <div class="goal-progress-fill" style="width: 100%;"></div>
+                    </div>
+                    <span class="goal-percentage">100% Complete (17/15 workouts)</span>
+                </div>
+                <div class="goal-details">
+                    <p>📅 Started: January 1, 2026</p>
+                    <p>✅ Completed: January 28, 2026</p>
+                    <p>🎉 Exceeded your goal! Great job!</p>
+                </div>
+            </div>
+
+            <div class="goal-card completed">
+                <div class="goal-header">
+                    <h4>⏱️ 500 Active Minutes in January</h4>
+                    <span class="goal-status completed">Completed</span>
+                </div>
+                <div class="goal-progress-container">
+                    <div class="goal-progress-bar">
+                        <div class="goal-progress-fill" style="width: 100%;"></div>
+                    </div>
+                    <span class="goal-percentage">100% Complete (620/500 minutes)</span>
+                </div>
+                <div class="goal-details">
+                    <p>📅 Started: January 1, 2026</p>
+                    <p>✅ Completed: January 25, 2026</p>
+                    <p>🎉 Fantastic dedication!</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="new-goal">
+            <h3>Create New Goal</h3>
+            <form class="goal-form">
+                <div class="form-group">
+                    <label for="goal-title">Goal Title</label>
+                    <input type="text" id="goal-title" placeholder="e.g., Run 100km this month">
+                </div>
+                
+                <div class="form-group">
+                    <label for="goal-type">Goal Type</label>
+                    <select id="goal-type">
+                        <option value="">Select goal type</option>
+                        <option value="distance">Distance</option>
+                        <option value="workouts">Number of Workouts</option>
+                        <option value="calories">Calories Burned</option>
+                        <option value="time">Active Time</option>
+                        <option value="weight">Weight Goal</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="goal-target">Target Value</label>
+                    <input type="number" id="goal-target" placeholder="e.g., 100">
+                </div>
+                
+                <div class="form-group">
+                    <label for="goal-deadline">Target Date</label>
+                    <input type="date" id="goal-deadline">
+                </div>
+                
+                <button type="submit" class="btn-primary">Create Goal</button>
+            </form>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 FitTrack. Your journey to a healthier you starts here.</p>
+    </footer>
+</body>
+</html>

@@ -3,51 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>No-Framework Website</title>
+    <title>FitTrack - Your Personal Fitness Companion</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <header>
-        <nav>
-            <div class="logo">My Website</div>
-            <ul class="nav-links">
+        <nav class="navbar">
+            <div class="nav-brand">
+                <h1>💪 FitTrack</h1>
+            </div>
+            <ul class="nav-menu">
                 <li><a href="index.html" class="active">Home</a></li>
-                <li><a href="about.html">About</a></li>
-                <li><a href="contact.html">Contact</a></li>
+                <li><a href="dashboard.html">Dashboard</a></li>
+                <li><a href="progress.html">Progress</a></li>
+                <li><a href="goals.html">Goals</a></li>
             </ul>
         </nav>
     </header>
 
-    <main>
-        <section class="hero">
-            <h1>Welcome to Our No-Framework Website</h1>
-            <p>A simple, clean website built with pure HTML, CSS, and JavaScript</p>
-            <button id="cta-button">Get Started</button>
-        </section>
+    <section class="hero">
+        <div class="hero-content">
+            <h2>Track Your Fitness Journey</h2>
+            <p>Monitor workouts, set goals, and achieve your fitness dreams</p>
+            <a href="dashboard.html" class="btn-primary">Get Started</a>
+        </div>
+    </section>
 
-        <section class="features">
-            <h2>Features</h2>
-            <div class="feature-grid">
-                <div class="feature-card">
-                    <h3>Fast</h3>
-                    <p>No framework overhead means lightning-fast load times</p>
-                </div>
-                <div class="feature-card">
-                    <h3>Simple</h3>
-                    <p>Clean, straightforward code that's easy to understand</p>
-                </div>
-                <div class="feature-card">
-                    <h3>Lightweight</h3>
-                    <p>Minimal dependencies for maximum performance</p>
-                </div>
-            </div>
-        </section>
-    </main>
+    <section class="features">
+        <div class="feature-card">
+            <div class="feature-icon">📊</div>
+            <h3>Track Workouts</h3>
+            <p>Log your daily exercises, reps, and sets with ease</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">📈</div>
+            <h3>Monitor Progress</h3>
+            <p>Visualize your improvements over time with detailed charts</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">🎯</div>
+            <h3>Set Goals</h3>
+            <p>Define and achieve your fitness milestones</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon">🏆</div>
+            <h3>Earn Achievements</h3>
+            <p>Unlock badges as you reach new fitness heights</p>
+        </div>
+    </section>
 
     <footer>
-        <p>&copy; 2026 No-Framework Website. All rights reserved.</p>
+        <p>&copy; 2026 FitTrack. Your journey to a healthier you starts here.</p>
     </footer>
-
-    <script src="script.js"></script>
 </body>
 </html>

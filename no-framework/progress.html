@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Progress - FitTrack</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="nav-brand">
+                <h1>💪 FitTrack</h1>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="dashboard.html">Dashboard</a></li>
+                <li><a href="progress.html" class="active">Progress</a></li>
+                <li><a href="goals.html">Goals</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="container">
+        <h2>Your Progress</h2>
+
+        <div class="progress-summary">
+            <div class="summary-card">
+                <h3>Monthly Overview - February 2026</h3>
+                <div class="progress-stats">
+                    <p>📅 Total Workouts: <strong>18 sessions</strong></p>
+                    <p>🔥 Total Calories Burned: <strong>7,240 calories</strong></p>
+                    <p>⏱️ Total Active Time: <strong>920 minutes (15.3 hours)</strong></p>
+                    <p>📈 Average Workout Duration: <strong>51 minutes</strong></p>
+                </div>
+            </div>
+        </div>
+
+        <h3>Weekly Activity (Last 7 Days)</h3>
+        <div class="progress-bar-container">
+            <div class="progress-week">
+                <div class="day-label">Mon</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="height: 85%;"></div>
+                </div>
+                <div class="day-value">60 min</div>
+            </div>
+            <div class="progress-week">
+                <div class="day-label">Tue</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="height: 60%;"></div>
+                </div>
+                <div class="day-value">40 min</div>
+            </div>
+            <div class="progress-week">
+                <div class="day-label">Wed</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="height: 75%;"></div>
+                </div>
+                <div class="day-value">50 min</div>
+            </div>
+            <div class="progress-week">
+                <div class="day-label">Thu</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="height: 90%;"></div>
+                </div>
+                <div class="day-value">65 min</div>
+            </div>
+            <div class="progress-week">
+                <div class="day-label">Fri</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="height: 70%;"></div>
+                </div>
+                <div class="day-value">45 min</div>
+            </div>
+            <div class="progress-week">
+                <div class="day-label">Sat</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="height: 55%;"></div>
+                </div>
+                <div class="day-value">35 min</div>
+            </div>
+            <div class="progress-week">
+                <div class="day-label">Sun</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="height: 80%;"></div>
+                </div>
+                <div class="day-value">55 min</div>
+            </div>
+        </div>
+        <p class="chart-label">Daily workout minutes over the past week</p>
+
+        <h3>Milestones Achieved</h3>
+        <div class="milestone-list">
+            <div class="milestone completed">
+                <div class="milestone-icon">🏆</div>
+                <div class="milestone-info">
+                    <h4>Week Warrior</h4>
+                    <p>Completed 7 consecutive days of workouts</p>
+                    <div class="milestone-progress">
+                        <div class="milestone-bar">
+                            <div class="milestone-fill" style="width: 100%;"></div>
+                        </div>
+                        <span>100%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="milestone completed">
+                <div class="milestone-icon">🔥</div>
+                <div class="milestone-info">
+                    <h4>Calorie Crusher</h4>
+                    <p>Burned 5,000 calories this month</p>
+                    <div class="milestone-progress">
+                        <div class="milestone-bar">
+                            <div class="milestone-fill" style="width: 100%;"></div>
+                        </div>
+                        <span>100%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="milestone">
+                <div class="milestone-icon">⏱️</div>
+                <div class="milestone-info">
+                    <h4>Time Master</h4>
+                    <p>Accumulate 1,000 active minutes (Current: 920 min)</p>
+                    <div class="milestone-progress">
+                        <div class="milestone-bar">
+                            <div class="milestone-fill" style="width: 92%;"></div>
+                        </div>
+                        <span>92%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="milestone">
+                <div class="milestone-icon">💯</div>
+                <div class="milestone-info">
+                    <h4>Century Club</h4>
+                    <p>Complete 100 total workouts (Current: 68 workouts)</p>
+                    <div class="milestone-progress">
+                        <div class="milestone-bar">
+                            <div class="milestone-fill" style="width: 68%;"></div>
+                        </div>
+                        <span>68%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="milestone">
+                <div class="milestone-icon">🚀</div>
+                <div class="milestone-info">
+                    <h4>Marathon Ready</h4>
+                    <p>Run a total of 100 kilometers (Current: 45 km)</p>
+                    <div class="milestone-progress">
+                        <div class="milestone-bar">
+                            <div class="milestone-fill" style="width: 45%;"></div>
+                        </div>
+                        <span>45%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 FitTrack. Your journey to a healthier you starts here.</p>
+    </footer>
+</body>
+</html>
