@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Progress - FitTrack</title>
     <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <header>
@@ -17,6 +18,9 @@
                 <li><a href="dashboard.html">Dashboard</a></li>
                 <li><a href="progress.html" class="active">Progress</a></li>
                 <li><a href="goals.html">Goals</a></li>
+                <li><a href="log-workout.html">Log Workout</a></li>
+                <li><a href="workout-plan.html">Workout Plan</a></li>
+                <li><a href="login.html">Login</a></li>
             </ul>
         </nav>
     </header>
@@ -90,6 +94,11 @@
         </div>
         <p class="chart-label">Daily workout minutes over the past week</p>
 
+        <h3>Personal Records</h3>
+        <div class="pr-chart-container">
+            <canvas id="prChart"></canvas>
+        </div>
+
         <h3>Milestones Achieved</h3>
         <div class="milestone-list">
             <div class="milestone completed">
@@ -162,6 +171,29 @@
                 </div>
             </div>
         </div>
+    <script>
+        const prCtx = document.getElementById('prChart').getContext('2d');
+        new Chart(prCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Bench Press', 'Squat', 'Deadlift', 'Overhead Press'],
+                datasets: [{
+                    label: 'Personal Records (kg)',
+                    data: [100, 140, 180, 60],
+                    backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                    borderColor: 'rgba(102, 126, 234, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    </script>
     </div>
 
     <footer>
