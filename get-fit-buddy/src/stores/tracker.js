@@ -4,7 +4,7 @@ export const useTrackerStore = defineStore('tracker', {
   state: () => ({
     currentUser: null,
     users: [
-      { id: 1, name: 'Admin User', role: 'admin', friends: [3] },
+      { id: 1, name: 'Admin User', role: 'admin', friends: [] },
       { id: 2, name: 'Nitin', role: 'user', friends: [3] },
       { id: 3, name: 'GymBuddy', role: 'user', friends: [2] }
     ],
