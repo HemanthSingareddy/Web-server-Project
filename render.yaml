@@ -30,4 +30,4 @@ services:
           name: get-fit-buddy
           property: renderURL
       - key: PORT
-        value: 3000
+        value: 5173
