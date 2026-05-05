@@ -1,9 +1,20 @@
 services:
+  - type: static_site
+    name: get-fit-buddy
+    buildCommand: npm install --prefix get-fit-buddy && npm run build --prefix get-fit-buddy
+    staticPublishDirectory: get-fit-buddy/dist
+    envVars:
+      - key: VITE_API_BASE
+        fromService:
+          name: get-fit-buddy-api
+          property: renderURL
+        appendPath: /api
+      
   - type: web
-    name: get-fit-buddy-server
+    name: get-fit-buddy-api
     runtime: node
     plan: free
-    buildCommand: npm install --prefix server && npm run build --prefix get-fit-buddy 2>/dev/null || true
+    buildCommand: npm install --prefix server
     startCommand: npm --prefix server start
     envVars:
       - key: NODE_ENV
@@ -16,7 +27,7 @@ services:
         sync: false
       - key: CORS_ORIGIN
         fromService:
-          name: get-fit-buddy-server
+          name: get-fit-buddy
           property: renderURL
       - key: PORT
         value: 3000
