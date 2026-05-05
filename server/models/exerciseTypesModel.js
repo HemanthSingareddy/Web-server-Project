@@ -52,7 +52,7 @@ const updateExerciseType = async ({ id, name, description }) => {
     { $set: set },
     { returnDocument: 'after' }
   )
-  return result.value ? toExerciseType(result.value) : null
+  return result ? toExerciseType(result) : null
 }
 
 const deleteExerciseType = async (id) => {
