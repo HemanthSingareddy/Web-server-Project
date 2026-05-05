@@ -1,10 +1,16 @@
 import { defineStore } from 'pinia'
-import { apiRequest } from '../services/apiClient'
+import { loginUser, registerUser, getCurrentUser, signOut } from '../services/supabaseAuth'
+import { supabase } from '../services/supabaseClient'
+
+// Key used only to indicate that a session exists, never stores the actual token
+const SESSION_MARKER_KEY = 'hasSession'
 
 export const useTrackerStore = defineStore('tracker', {
   state: () => ({
     currentUser: null,
-    token: localStorage.getItem('token') || null,
+    // Token is held in memory only; Supabase manages session persistence internally
+    token: null,
+    hasSession: !!localStorage.getItem(SESSION_MARKER_KEY),
     users: [],
     exerciseTypes: [],
     activities: [],
@@ -21,7 +27,7 @@ export const useTrackerStore = defineStore('tracker', {
 
   actions: {
     async bootstrap() {
-      if (!this.isAuthenticated) return
+      if (!this.hasSession) return
       try {
         await Promise.all([
           this.fetchMe(),
@@ -36,213 +42,286 @@ export const useTrackerStore = defineStore('tracker', {
     },
 
     async register(name, email, password) {
-      const data = await apiRequest('/auth/register', {
-        method: 'POST',
-        body: { name, email, password },
-      })
+      const data = await registerUser(name, email, password)
       this.currentUser = data.user
+      // Store token in memory only; Supabase persists the session internally
       this.token = data.token
-      localStorage.setItem('token', data.token)
+      if (data.token) {
+        this.hasSession = true
+        localStorage.setItem(SESSION_MARKER_KEY, '1')
+      }
       return data
     },
 
     async login(email, password) {
-      const data = await apiRequest('/auth/login', {
-        method: 'POST',
-        body: { email, password },
-      })
+      const data = await loginUser(email, password)
       this.currentUser = data.user
+      // Store token in memory only; Supabase persists the session internally
       this.token = data.token
-      localStorage.setItem('token', data.token)
+      if (data.token) {
+        this.hasSession = true
+        localStorage.setItem(SESSION_MARKER_KEY, '1')
+      }
       return data
     },
 
     async fetchMe() {
-      const data = await apiRequest('/auth/me', { token: this.token })
-      this.currentUser = data.user
-      return data
+      const { data: sessionData } = await supabase.auth.getSession()
+      if (sessionData?.session) {
+        this.token = sessionData.session.access_token
+      }
+      const user = await getCurrentUser()
+      if (user) this.currentUser = user
+      return { user }
     },
 
-    logout() {
+    async logout() {
+      await signOut()
       this.currentUser = null
       this.token = null
+      this.hasSession = false
       this.users = []
       this.exerciseTypes = []
       this.activities = []
       this.friends = []
       this.feed = []
-      localStorage.removeItem('token')
+      localStorage.removeItem(SESSION_MARKER_KEY)
     },
 
     // Exercise Types
     async fetchExerciseTypes() {
-      const data = await apiRequest('/exercise-types')
-      this.exerciseTypes = data.types || []
-      return data
+      const { data: types, error } = await supabase.from('exercise_types').select('*')
+      if (error) throw new Error(error.message)
+      this.exerciseTypes = types || []
+      return { types }
     },
 
     async createExerciseType(name, description) {
-      const data = await apiRequest('/exercise-types', {
-        method: 'POST',
-        token: this.token,
-        body: { name, description },
-      })
-      this.exerciseTypes.push(data.type)
-      return data
+      const { data: type, error } = await supabase
+        .from('exercise_types')
+        .insert({ name, description })
+        .select()
+        .single()
+      if (error) throw new Error(error.message)
+      this.exerciseTypes.push(type)
+      return { type }
     },
 
     async updateExerciseType(id, name, description) {
-      const data = await apiRequest(`/exercise-types/${id}`, {
-        method: 'PUT',
-        token: this.token,
-        body: { name, description },
-      })
+      const { data: type, error } = await supabase
+        .from('exercise_types')
+        .update({ name, description })
+        .eq('id', id)
+        .select()
+        .single()
+      if (error) throw new Error(error.message)
       const idx = this.exerciseTypes.findIndex((t) => t.id === id)
-      if (idx >= 0) {
-        this.exerciseTypes[idx] = data.type
-      }
-      return data
+      if (idx >= 0) this.exerciseTypes[idx] = type
+      return { type }
     },
 
     async deleteExerciseType(id) {
-      await apiRequest(`/exercise-types/${id}`, {
-        method: 'DELETE',
-        token: this.token,
-      })
+      const { error } = await supabase.from('exercise_types').delete().eq('id', id)
+      if (error) throw new Error(error.message)
       this.exerciseTypes = this.exerciseTypes.filter((t) => t.id !== id)
     },
 
     // Activities
     async fetchActivities() {
-      const data = await apiRequest('/activities', { token: this.token })
-      this.activities = data.activities || []
-      return data
+      const { data: activities, error } = await supabase
+        .from('activities')
+        .select('*')
+        .eq('user_id', this.currentUser?.id)
+      if (error) throw new Error(error.message)
+      this.activities = activities || []
+      return { activities }
     },
 
     async createActivity(date, exerciseTypeId, durationMinutes, notes) {
-      const data = await apiRequest('/activities', {
-        method: 'POST',
-        token: this.token,
-        body: { date, exerciseTypeId, durationMinutes, notes },
-      })
-      this.activities.push(data.activity)
-      return data
+      const { data: activity, error } = await supabase
+        .from('activities')
+        .insert({
+          date,
+          exercise_type_id: exerciseTypeId,
+          duration_minutes: durationMinutes,
+          notes,
+          user_id: this.currentUser?.id,
+        })
+        .select()
+        .single()
+      if (error) throw new Error(error.message)
+      this.activities.push(activity)
+      return { activity }
     },
 
     async updateActivity(id, date, exerciseTypeId, durationMinutes, notes) {
-      const data = await apiRequest(`/activities/${id}`, {
-        method: 'PUT',
-        token: this.token,
-        body: { date, exerciseTypeId, durationMinutes, notes },
-      })
+      const { data: activity, error } = await supabase
+        .from('activities')
+        .update({
+          date,
+          exercise_type_id: exerciseTypeId,
+          duration_minutes: durationMinutes,
+          notes,
+        })
+        .eq('id', id)
+        .select()
+        .single()
+      if (error) throw new Error(error.message)
       const idx = this.activities.findIndex((a) => a.id === id)
-      if (idx >= 0) {
-        this.activities[idx] = data.activity
-      }
-      return data
+      if (idx >= 0) this.activities[idx] = activity
+      return { activity }
     },
 
     async deleteActivity(id) {
-      await apiRequest(`/activities/${id}`, {
-        method: 'DELETE',
-        token: this.token,
-      })
+      const { error } = await supabase.from('activities').delete().eq('id', id)
+      if (error) throw new Error(error.message)
       this.activities = this.activities.filter((a) => a.id !== id)
     },
 
     // Weekly summary
     async fetchWeeklySummary(startDate) {
-      const data = await apiRequest(`/activities/summary/weekly?start=${startDate}`, {
-        token: this.token,
-      })
-      this.summary = data.summary
-      return data
+      const start = new Date(startDate)
+      if (isNaN(start.getTime())) throw new Error('Invalid startDate provided')
+      const end = new Date(start)
+      end.setDate(end.getDate() + 7)
+      const { data: activities, error } = await supabase
+        .from('activities')
+        .select('*, exercise_types(name)')
+        .eq('user_id', this.currentUser?.id)
+        .gte('date', start.toISOString().split('T')[0])
+        .lt('date', end.toISOString().split('T')[0])
+      if (error) throw new Error(error.message)
+      const summary = activities || []
+      this.summary = summary
+      return { summary }
     },
 
     // Streak
     async fetchStreak() {
-      const data = await apiRequest('/activities/streak', { token: this.token })
-      this.streak = data.streak
-      return data
+      const { data: activities, error } = await supabase
+        .from('activities')
+        .select('date')
+        .eq('user_id', this.currentUser?.id)
+        .order('date', { ascending: false })
+      if (error) throw new Error(error.message)
+      const uniqueDates = [...new Set((activities || []).map((a) => a.date))].sort().reverse()
+      let streak = 0
+      const today = new Date().toISOString().split('T')[0]
+      let expected = today
+      for (const date of uniqueDates) {
+        if (date === expected) {
+          streak++
+          const d = new Date(expected)
+          d.setDate(d.getDate() - 1)
+          expected = d.toISOString().split('T')[0]
+        } else {
+          break
+        }
+      }
+      this.streak = streak
+      return { streak }
     },
 
     // Friends
     async fetchFriends() {
-      const data = await apiRequest('/friends', { token: this.token })
-      this.friends = data.friends || []
-      return data
+      const { data: friends, error } = await supabase
+        .from('friends')
+        .select('*')
+        .eq('user_id', this.currentUser?.id)
+      if (error) throw new Error(error.message)
+      this.friends = friends || []
+      return { friends }
     },
 
     async addFriend(friendUserId) {
-      const data = await apiRequest('/friends', {
-        method: 'POST',
-        token: this.token,
-        body: { friendUserId },
-      })
-      if (!this.friends.find((f) => f.id === data.friend.friendUserId)) {
-        this.friends.push(data.friend)
+      const { data: friend, error } = await supabase
+        .from('friends')
+        .insert({ user_id: this.currentUser?.id, friend_id: friendUserId })
+        .select()
+        .single()
+      if (error) throw new Error(error.message)
+      if (!this.friends.find((f) => f.friend_id === friendUserId)) {
+        this.friends.push(friend)
       }
-      return data
+      return { friend }
     },
 
     async removeFriend(friendUserId) {
-      await apiRequest('/friends', {
-        method: 'DELETE',
-        token: this.token,
-        body: { friendUserId },
-      })
-      this.friends = this.friends.filter((f) => f.friendUserId !== friendUserId)
+      const { error } = await supabase
+        .from('friends')
+        .delete()
+        .eq('user_id', this.currentUser?.id)
+        .eq('friend_id', friendUserId)
+      if (error) throw new Error(error.message)
+      this.friends = this.friends.filter((f) => f.friend_id !== friendUserId)
     },
 
-    // Feed
+    // Feed - requires fetchFriends to have been called first (done in bootstrap)
     async fetchFriendFeed() {
-      const data = await apiRequest('/activities/feed/friends', { token: this.token })
-      this.feed = data.feed || []
-      return data
+      const friendIds = this.friends.map((f) => f.friend_id)
+      if (friendIds.length === 0) {
+        this.feed = []
+        return { feed: [] }
+      }
+      const { data: feed, error } = await supabase
+        .from('activities')
+        .select('*, exercise_types(name)')
+        .in('user_id', friendIds)
+        .order('date', { ascending: false })
+        .limit(20)
+      if (error) throw new Error(error.message)
+      this.feed = feed || []
+      return { feed }
     },
 
-    // Users (admin)
+    // Users (admin) - reads and updates profiles table
     async fetchUsers() {
-      const data = await apiRequest('/users', { token: this.token })
-      this.users = data.users || []
-      return data
+      const { data: users, error } = await supabase.from('profiles').select('*')
+      if (error) throw new Error(error.message)
+      this.users = users || []
+      return { users }
     },
 
+    // Note: creates a profile record only; use Supabase dashboard / admin API to create auth users
     async createUser(name, email, role) {
-      const data = await apiRequest('/users', {
-        method: 'POST',
-        token: this.token,
-        body: { name, email, role },
-      })
-      this.users.push(data.user)
-      return data
+      const { data: user, error } = await supabase
+        .from('profiles')
+        .insert({ name, email, role })
+        .select()
+        .single()
+      if (error) throw new Error(error.message)
+      this.users.push(user)
+      return { user }
     },
 
     async updateUser(id, name, role) {
-      const data = await apiRequest(`/users/${id}`, {
-        method: 'PUT',
-        token: this.token,
-        body: { name, role },
-      })
+      const { data: user, error } = await supabase
+        .from('profiles')
+        .update({ name, role })
+        .eq('id', id)
+        .select()
+        .single()
+      if (error) throw new Error(error.message)
       const idx = this.users.findIndex((u) => u.id === id)
-      if (idx >= 0) {
-        this.users[idx] = data.user
-      }
-      return data
+      if (idx >= 0) this.users[idx] = user
+      return { user }
     },
 
+    // Note: removes the profile record only; the Supabase Auth user must be deleted separately
     async deleteUser(id) {
-      await apiRequest(`/users/${id}`, {
-        method: 'DELETE',
-        token: this.token,
-      })
+      const { error } = await supabase.from('profiles').delete().eq('id', id)
+      if (error) throw new Error(error.message)
       this.users = this.users.filter((u) => u.id !== id)
     },
 
     // People list (for friend adding)
     async fetchPeople() {
-      const data = await apiRequest('/users/people', { token: this.token })
-      return data.people || []
+      const { data: people, error } = await supabase
+        .from('profiles')
+        .select('id, name, email')
+        .neq('id', this.currentUser?.id)
+      if (error) throw new Error(error.message)
+      return people || []
     },
   },
 })

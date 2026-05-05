@@ -15,28 +15,26 @@ const router = createRouter({
   ],
 })
 
-router.beforeEach(async (to, from, next) => {
+router.beforeEach(async (to) => {
   const store = useTrackerStore()
 
-  // Bootstrap on first navigation if token exists but no currentUser
-  if (store.token && !store.currentUser) {
+  // Bootstrap on first navigation if a session marker exists but no currentUser loaded
+  if (store.hasSession && !store.currentUser) {
     try {
       await store.bootstrap()
     } catch {
-      store.logout()
-      return next({ name: 'login' })
+      await store.logout()
+      return { name: 'login' }
     }
   }
 
   if (to.meta.requiresAuth && !store.isAuthenticated) {
-    return next({ name: 'login' })
+    return { name: 'login' }
   }
 
   if (to.meta.requiresAdmin && !store.isAdmin) {
-    return next({ name: 'dashboard' })
+    return { name: 'dashboard' }
   }
-
-  next()
 })
 
 export default router
