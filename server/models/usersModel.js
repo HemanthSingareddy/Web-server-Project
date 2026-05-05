@@ -72,7 +72,7 @@ const updateUser = async ({ id, name, role }) => {
     { $set: set },
     { returnDocument: 'after', projection: { passwordHash: 0 } }
   )
-  return result.value ? toUserPublic(result.value) : null
+  return result ? toUserPublic(result) : null
 }
 
 const deleteUser = async (id) => {
