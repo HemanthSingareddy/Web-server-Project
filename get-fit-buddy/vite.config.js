@@ -8,8 +8,8 @@ import vueDevTools from 'vite-plugin-vue-devtools'
 export default defineConfig(({ mode }) => ({
   plugins: [
     vue(),
-    mode !== 'production' && vueDevTools(),
-  ],
+    mode !== 'production' ? vueDevTools() : undefined,
+  ].filter(Boolean),
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))

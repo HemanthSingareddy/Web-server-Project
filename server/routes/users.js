@@ -1,11 +1,20 @@
 const express = require('express')
+const rateLimit = require('express-rate-limit')
 const { requireAuth, requireAdmin } = require('../middleware/auth')
 const usersController = require('../controllers/usersController')
 const asyncHandler = require('../middleware/asyncHandler')
 
 const router = express.Router()
 
-router.get('/people', requireAuth, asyncHandler(usersController.listPeople))
+const peopleLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please try again later.' },
+})
+
+router.get('/people', requireAuth, peopleLimiter, asyncHandler(usersController.listPeople))
 
 router.use(requireAdmin)
 router.get('/', asyncHandler(usersController.listUsers))
