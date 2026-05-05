@@ -14,7 +14,7 @@ const peopleLimiter = rateLimit({
   message: { error: 'Too many requests, please try again later.' },
 })
 
-router.get('/people', requireAuth, peopleLimiter, asyncHandler(usersController.listPeople))
+router.get('/people', peopleLimiter, requireAuth, asyncHandler(usersController.listPeople))
 
 router.use(requireAdmin)
 router.get('/', asyncHandler(usersController.listUsers))

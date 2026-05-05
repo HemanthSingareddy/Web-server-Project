@@ -15,6 +15,6 @@ const authLimiter = rateLimit({
 
 router.post('/register', authLimiter, asyncHandler(authController.register))
 router.post('/login', authLimiter, asyncHandler(authController.login))
-router.get('/me', require('../middleware/auth').requireAuth, asyncHandler(authController.me))
+router.get('/me', authLimiter, require('../middleware/auth').requireAuth, asyncHandler(authController.me))
 
 module.exports = router
