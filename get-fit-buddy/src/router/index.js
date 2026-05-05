@@ -11,19 +11,32 @@ const router = createRouter({
     { path: '/', name: 'login', component: LoginView },
     { path: '/dashboard', name: 'dashboard', component: DashboardView, meta: { requiresAuth: true } },
     { path: '/friends', name: 'friends', component: FriendsView, meta: { requiresAuth: true } },
-    { path: '/admin', name: 'admin', component: AdminView, meta: { requiresAuth: true, requiresAdmin: true } }
-  ]
+    { path: '/admin', name: 'admin', component: AdminView, meta: { requiresAuth: true, requiresAdmin: true } },
+  ],
 })
 
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   const store = useTrackerStore()
-  if (to.meta.requiresAuth && !store.currentUser) {
-    next({ name: 'login' })
-  } else if (to.meta.requiresAdmin && store.currentUser.role !== 'admin') {
-    next({ name: 'dashboard' })
-  } else {
-    next()
+
+  // Bootstrap on first navigation if token exists but no currentUser
+  if (store.token && !store.currentUser) {
+    try {
+      await store.bootstrap()
+    } catch {
+      store.logout()
+      return next({ name: 'login' })
+    }
   }
+
+  if (to.meta.requiresAuth && !store.isAuthenticated) {
+    return next({ name: 'login' })
+  }
+
+  if (to.meta.requiresAdmin && !store.isAdmin) {
+    return next({ name: 'dashboard' })
+  }
+
+  next()
 })
 
 export default router
