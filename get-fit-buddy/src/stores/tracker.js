@@ -36,6 +36,8 @@ export const useTrackerStore = defineStore('tracker', {
           this.fetchFriends(),
           this.fetchFriendFeed(),
         ])
+        await this.fetchWeeklySummary(new Date().toISOString().split('T')[0])
+        await this.fetchStreak()
       } catch {
         // Silent catch - let individual endpoints handle errors
       }
@@ -44,7 +46,6 @@ export const useTrackerStore = defineStore('tracker', {
     async register(name, email, password) {
       const data = await registerUser(name, email, password)
       this.currentUser = data.user
-      // Store token in memory only; Supabase persists the session internally
       this.token = data.token
       if (data.token) {
         this.hasSession = true
@@ -56,7 +57,6 @@ export const useTrackerStore = defineStore('tracker', {
     async login(email, password) {
       const data = await loginUser(email, password)
       this.currentUser = data.user
-      // Store token in memory only; Supabase persists the session internally
       this.token = data.token
       if (data.token) {
         this.hasSession = true
@@ -85,6 +85,8 @@ export const useTrackerStore = defineStore('tracker', {
       this.activities = []
       this.friends = []
       this.feed = []
+      this.summary = null
+      this.streak = 0
       localStorage.removeItem(SESSION_MARKER_KEY)
     },
 
@@ -102,6 +104,7 @@ export const useTrackerStore = defineStore('tracker', {
         .insert({ name, description })
         .select()
         .single()
+
       if (error) throw new Error(error.message)
       this.exerciseTypes.push(type)
       return { type }
@@ -114,6 +117,7 @@ export const useTrackerStore = defineStore('tracker', {
         .eq('id', id)
         .select()
         .single()
+
       if (error) throw new Error(error.message)
       const idx = this.exerciseTypes.findIndex((t) => t.id === id)
       if (idx >= 0) this.exerciseTypes[idx] = type
@@ -133,6 +137,7 @@ export const useTrackerStore = defineStore('tracker', {
         .from('activities')
         .select('*')
         .eq('user_id', this.currentUser.id)
+
       if (error) throw new Error(error.message)
       this.activities = activities || []
       return { activities }
@@ -150,6 +155,7 @@ export const useTrackerStore = defineStore('tracker', {
         })
         .select()
         .single()
+
       if (error) throw new Error(error.message)
       this.activities.push(activity)
 
@@ -171,6 +177,7 @@ export const useTrackerStore = defineStore('tracker', {
         .eq('id', id)
         .select()
         .single()
+
       if (error) throw new Error(error.message)
       const idx = this.activities.findIndex((a) => a.id === id)
       if (idx >= 0) this.activities[idx] = activity
@@ -197,12 +204,14 @@ export const useTrackerStore = defineStore('tracker', {
       if (isNaN(start.getTime())) throw new Error('Invalid startDate provided')
       const end = new Date(start)
       end.setDate(end.getDate() + 7)
+
       const { data: activities, error } = await supabase
         .from('activities')
         .select('*, exercise_types(name)')
         .eq('user_id', this.currentUser.id)
         .gte('date', start.toISOString().split('T')[0])
         .lt('date', end.toISOString().split('T')[0])
+
       if (error) throw new Error(error.message)
       const summary = activities || []
       this.summary = summary
@@ -217,11 +226,14 @@ export const useTrackerStore = defineStore('tracker', {
         .select('date')
         .eq('user_id', this.currentUser.id)
         .order('date', { ascending: false })
+
       if (error) throw new Error(error.message)
+
       const uniqueDates = [...new Set((activities || []).map((a) => a.date))].sort().reverse()
       let streak = 0
       const today = new Date().toISOString().split('T')[0]
       let expected = today
+
       for (const date of uniqueDates) {
         if (date === expected) {
           streak++
@@ -232,6 +244,7 @@ export const useTrackerStore = defineStore('tracker', {
           break
         }
       }
+
       this.streak = streak
       return { streak }
     },
@@ -243,6 +256,7 @@ export const useTrackerStore = defineStore('tracker', {
         .from('friends')
         .select('*')
         .eq('user_id', this.currentUser.id)
+
       if (error) throw new Error(error.message)
       this.friends = friends || []
       return { friends }
@@ -254,6 +268,7 @@ export const useTrackerStore = defineStore('tracker', {
         .insert({ user_id: this.currentUser?.id, friend_id: friendUserId })
         .select()
         .single()
+
       if (error) throw new Error(error.message)
       if (!this.friends.find((f) => f.friend_id === friendUserId)) {
         this.friends.push(friend)
@@ -267,11 +282,12 @@ export const useTrackerStore = defineStore('tracker', {
         .delete()
         .eq('user_id', this.currentUser?.id)
         .eq('friend_id', friendUserId)
+
       if (error) throw new Error(error.message)
       this.friends = this.friends.filter((f) => f.friend_id !== friendUserId)
     },
 
-    // Feed - requires fetchFriends to have been called first (done in bootstrap)
+    // Feed
     async fetchFriendFeed() {
       if (!this.currentUser?.id) return { feed: [] }
       const friendIds = this.friends.map((f) => f.friend_id)
@@ -279,18 +295,20 @@ export const useTrackerStore = defineStore('tracker', {
         this.feed = []
         return { feed: [] }
       }
+
       const { data: feed, error } = await supabase
         .from('activities')
         .select('*, exercise_types(name)')
         .in('user_id', friendIds)
         .order('date', { ascending: false })
         .limit(20)
+
       if (error) throw new Error(error.message)
       this.feed = feed || []
       return { feed }
     },
 
-    // Users (admin) - reads and updates profiles table
+    // Users (admin)
     async fetchUsers() {
       const { data: users, error } = await supabase.from('profiles').select('*')
       if (error) throw new Error(error.message)
@@ -298,13 +316,13 @@ export const useTrackerStore = defineStore('tracker', {
       return { users }
     },
 
-    // Note: creates a profile record only; use Supabase dashboard / admin API to create auth users
     async createUser(name, email, role) {
       const { data: user, error } = await supabase
         .from('profiles')
         .insert({ name, email, role })
         .select()
         .single()
+
       if (error) throw new Error(error.message)
       this.users.push(user)
       return { user }
@@ -317,25 +335,25 @@ export const useTrackerStore = defineStore('tracker', {
         .eq('id', id)
         .select()
         .single()
+
       if (error) throw new Error(error.message)
       const idx = this.users.findIndex((u) => u.id === id)
       if (idx >= 0) this.users[idx] = user
       return { user }
     },
 
-    // Note: removes the profile record only; the Supabase Auth user must be deleted separately
     async deleteUser(id) {
       const { error } = await supabase.from('profiles').delete().eq('id', id)
       if (error) throw new Error(error.message)
       this.users = this.users.filter((u) => u.id !== id)
     },
 
-    // People list (for friend adding)
     async fetchPeople() {
       const { data: people, error } = await supabase
         .from('profiles')
         .select('id, name, email')
         .neq('id', this.currentUser?.id)
+
       if (error) throw new Error(error.message)
       return people || []
     },
