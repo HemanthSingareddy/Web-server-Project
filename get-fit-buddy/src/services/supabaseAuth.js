@@ -54,26 +54,18 @@ export async function registerUser(name, email, password) {
 }
 
 export async function getCurrentUser() {
-  const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
-  if (sessionError) throw new Error(sessionError.message)
-
-  const sessionUser = sessionData?.session?.user
-  if (!sessionUser) return null
-
-  const { data: profile, error: profileError } = await supabase
-    .from('profiles')
-    .select('id, email, name, role')
-    .eq('id', sessionUser.id)
-    .single()
-
-  if (profileError && profileError.code !== 'PGRST116') {
-    throw new Error(profileError.message)
-  }
-
+  const { data, error } = await supabase.auth.getUser()
+  if (error) throw new Error(error.message)
+  if (!data.user) return null
   return {
-    id: sessionUser.id,
-    email: sessionUser.email,
-    name: profile?.name || sessionUser.user_metadata?.name || sessionUser.email,
-    role: profile?.role || sessionUser.user_metadata?.role || 'user',
+    id: data.user.id,
+    email: data.user.email,
+    name: data.user.user_metadata?.name || data.user.email,
+    role: data.user.user_metadata?.role || 'user',
   }
+}
+
+export async function signOut() {
+  const { error } = await supabase.auth.signOut()
+  if (error) throw new Error(error.message)
 }
