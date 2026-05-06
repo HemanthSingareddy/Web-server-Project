@@ -144,7 +144,7 @@ export const useTrackerStore = defineStore('tracker', {
         .insert({
           date,
           exercise_type_id: exerciseTypeId,
-          duration_minutes: durationMinutes,
+          duration_minutes: Number(durationMinutes),
           notes,
           user_id: this.currentUser?.id,
         })
@@ -152,6 +152,10 @@ export const useTrackerStore = defineStore('tracker', {
         .single()
       if (error) throw new Error(error.message)
       this.activities.push(activity)
+
+      await this.fetchWeeklySummary(date)
+      await this.fetchStreak()
+
       return { activity }
     },
 
@@ -161,7 +165,7 @@ export const useTrackerStore = defineStore('tracker', {
         .update({
           date,
           exercise_type_id: exerciseTypeId,
-          duration_minutes: durationMinutes,
+          duration_minutes: Number(durationMinutes),
           notes,
         })
         .eq('id', id)
@@ -170,6 +174,10 @@ export const useTrackerStore = defineStore('tracker', {
       if (error) throw new Error(error.message)
       const idx = this.activities.findIndex((a) => a.id === id)
       if (idx >= 0) this.activities[idx] = activity
+
+      await this.fetchWeeklySummary(date)
+      await this.fetchStreak()
+
       return { activity }
     },
 
@@ -177,6 +185,9 @@ export const useTrackerStore = defineStore('tracker', {
       const { error } = await supabase.from('activities').delete().eq('id', id)
       if (error) throw new Error(error.message)
       this.activities = this.activities.filter((a) => a.id !== id)
+
+      await this.fetchWeeklySummary(new Date().toISOString().split('T')[0])
+      await this.fetchStreak()
     },
 
     // Weekly summary
