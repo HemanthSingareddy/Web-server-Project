@@ -22,7 +22,7 @@ export const useTrackerStore = defineStore('tracker', {
 
   getters: {
     isAuthenticated: (state) => Boolean(state.currentUser && state.token),
-    isAdmin: (state) => state.currentUser?.role === 'admin',
+    isAdmin: (state) => state.currentUser?.email === 'hemanth1@gmail.com',
   },
 
   actions: {
