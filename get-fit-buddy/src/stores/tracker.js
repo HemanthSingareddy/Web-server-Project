@@ -29,8 +29,8 @@ export const useTrackerStore = defineStore('tracker', {
     async bootstrap() {
       if (!this.hasSession) return
       try {
+        await this.fetchMe()
         await Promise.all([
-          this.fetchMe(),
           this.fetchExerciseTypes(),
           this.fetchActivities(),
           this.fetchFriends(),
@@ -128,10 +128,11 @@ export const useTrackerStore = defineStore('tracker', {
 
     // Activities
     async fetchActivities() {
+      if (!this.currentUser?.id) return { activities: [] }
       const { data: activities, error } = await supabase
         .from('activities')
         .select('*')
-        .eq('user_id', this.currentUser?.id)
+        .eq('user_id', this.currentUser.id)
       if (error) throw new Error(error.message)
       this.activities = activities || []
       return { activities }
@@ -180,6 +181,7 @@ export const useTrackerStore = defineStore('tracker', {
 
     // Weekly summary
     async fetchWeeklySummary(startDate) {
+      if (!this.currentUser?.id) return { summary: [] }
       const start = new Date(startDate)
       if (isNaN(start.getTime())) throw new Error('Invalid startDate provided')
       const end = new Date(start)
@@ -187,7 +189,7 @@ export const useTrackerStore = defineStore('tracker', {
       const { data: activities, error } = await supabase
         .from('activities')
         .select('*, exercise_types(name)')
-        .eq('user_id', this.currentUser?.id)
+        .eq('user_id', this.currentUser.id)
         .gte('date', start.toISOString().split('T')[0])
         .lt('date', end.toISOString().split('T')[0])
       if (error) throw new Error(error.message)
@@ -198,10 +200,11 @@ export const useTrackerStore = defineStore('tracker', {
 
     // Streak
     async fetchStreak() {
+      if (!this.currentUser?.id) return { streak: 0 }
       const { data: activities, error } = await supabase
         .from('activities')
         .select('date')
-        .eq('user_id', this.currentUser?.id)
+        .eq('user_id', this.currentUser.id)
         .order('date', { ascending: false })
       if (error) throw new Error(error.message)
       const uniqueDates = [...new Set((activities || []).map((a) => a.date))].sort().reverse()
@@ -224,10 +227,11 @@ export const useTrackerStore = defineStore('tracker', {
 
     // Friends
     async fetchFriends() {
+      if (!this.currentUser?.id) return { friends: [] }
       const { data: friends, error } = await supabase
         .from('friends')
         .select('*')
-        .eq('user_id', this.currentUser?.id)
+        .eq('user_id', this.currentUser.id)
       if (error) throw new Error(error.message)
       this.friends = friends || []
       return { friends }
@@ -258,6 +262,7 @@ export const useTrackerStore = defineStore('tracker', {
 
     // Feed - requires fetchFriends to have been called first (done in bootstrap)
     async fetchFriendFeed() {
+      if (!this.currentUser?.id) return { feed: [] }
       const friendIds = this.friends.map((f) => f.friend_id)
       if (friendIds.length === 0) {
         this.feed = []
