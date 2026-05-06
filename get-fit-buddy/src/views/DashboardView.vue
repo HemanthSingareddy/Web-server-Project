@@ -7,25 +7,22 @@ const activityForm = ref({ date: '', exerciseTypeId: '', durationMinutes: '', no
 const editingId = ref(null)
 const error = ref('')
 const loading = ref(false)
-const summary = ref(null)
-const streak = ref(0)
+const summary = computed(() => store.summary)
+const streak = computed(() => store.streak)
+
+const getStartOfWeek = () => {
+  const today = new Date()
+  const startOfWeek = new Date(today)
+  startOfWeek.setDate(today.getDate() - today.getDay())
+  return startOfWeek.toISOString().split('T')[0]
+}
 
 onMounted(async () => {
   try {
     await store.fetchExerciseTypes()
     await store.fetchActivities()
-    
-    // Fetch weekly summary for the current week
-    const today = new Date()
-    const startOfWeek = new Date(today)
-    startOfWeek.setDate(today.getDate() - today.getDay())
-    const startDate = startOfWeek.toISOString().split('T')[0]
-    await store.fetchWeeklySummary(startDate)
-    summary.value = store.summary
-    
-    // Fetch current streak
+    await store.fetchWeeklySummary(getStartOfWeek())
     await store.fetchStreak()
-    streak.value = store.streak
   } catch (err) {
     error.value = 'Failed to load data'
   }
@@ -72,15 +69,8 @@ const submitActivity = async () => {
     activityForm.value = { date: '', exerciseTypeId: '', durationMinutes: '', notes: '' }
     editingId.value = null
     
-    // Refresh summary and streak
-    const today = new Date()
-    const startOfWeek = new Date(today)
-    startOfWeek.setDate(today.getDate() - today.getDay())
-    const startDate = startOfWeek.toISOString().split('T')[0]
-    await store.fetchWeeklySummary(startDate)
-    summary.value = store.summary
+    await store.fetchWeeklySummary(getStartOfWeek())
     await store.fetchStreak()
-    streak.value = store.streak
   } catch (err) {
     error.value = err.message || 'Failed to save activity'
   } finally {
@@ -91,8 +81,8 @@ const submitActivity = async () => {
 const editActivity = (activity) => {
   activityForm.value = {
     date: activity.date,
-    exerciseTypeId: activity.exerciseTypeId,
-    durationMinutes: String(activity.durationMinutes),
+    exerciseTypeId: activity.exercise_type_id,
+    durationMinutes: String(activity.duration_minutes),
     notes: activity.notes || ''
   }
   editingId.value = activity.id
@@ -102,6 +92,7 @@ const deleteActivity = async (id) => {
   if (!confirm('Are you sure?')) return
   try {
     await store.deleteActivity(id)
+    await store.fetchWeeklySummary(getStartOfWeek())
   } catch (err) {
     error.value = 'Failed to delete activity'
   }
@@ -210,8 +201,8 @@ const myActivities = computed(() => store.activities)
             <tbody>
               <tr v-for="activity in myActivities" :key="activity.id">
                 <td>{{ activity.date }}</td>
-                <td><strong>{{ activity.exerciseTypeName }}</strong></td>
-                <td>{{ activity.durationMinutes }}m</td>
+                <td><strong>{{ getExerciseTypeName(activity.exercise_type_id) }}</strong></td>
+                <td>{{ activity.duration_minutes }}m</td>
                 <td><span class="is-size-7">{{ activity.notes }}</span></td>
                 <td>
                   <div class="buttons">
