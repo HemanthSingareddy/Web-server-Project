@@ -8,10 +8,11 @@ export async function loginUser(email, password) {
     .from('users')
     .select('id, email, name, role')
     .eq('id', data.user.id)
-    .single()
+    .maybeSingle()
 
-  if (profileError) {
-    throw new Error(profileError.message)
+  if (profileError) throw new Error(profileError.message)
+  if (!profile) {
+    throw new Error('User profile row not found in users table.')
   }
 
   return {
@@ -77,9 +78,10 @@ export async function getCurrentUser() {
     .from('users')
     .select('id, email, name, role')
     .eq('id', sessionData.session.user.id)
-    .single()
+    .maybeSingle()
 
   if (error) throw new Error(error.message)
+  if (!userRow) return null
 
   return {
     id: userRow.id,
