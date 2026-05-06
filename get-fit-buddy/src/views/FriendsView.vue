@@ -87,10 +87,10 @@ const removeFriend = async (friendUserId) => {
         </div>
         <div v-else class="tags">
           <span v-for="friend in store.friends" :key="friend.id" class="tag is-info is-light">
-            {{ friend.name }}
+            {{ friend.users?.name }}
             <button
               class="delete is-small"
-              @click="removeFriend(friend.friendUserId)"
+              @click="removeFriend(friend.friend_id)"
               type="button"
             ></button>
           </span>
@@ -108,13 +108,13 @@ const removeFriend = async (friendUserId) => {
             <div class="media-content">
               <div class="content">
                 <p>
-                  <strong class="is-size-5">{{ activity.userName }}</strong>
+                  <strong class="is-size-5">{{ activity.users?.name }}</strong>
                   <span class="has-text-grey"> completed a </span>
-                  <strong class="has-text-info">{{ activity.exerciseTypeName }}</strong>
+                  <strong class="has-text-info">{{ activity.exercise_types?.name }}</strong>
                   <span class="has-text-grey"> workout.</span>
                   <br />
                   <small class="has-text-grey-light">
-                    {{ activity.date }} • {{ activity.durationMinutes }} minutes
+                    {{ activity.date }} • {{ activity.duration_minutes }} minutes
                   </small>
                   <br />
                   <span v-if="activity.notes" class="is-italic mt-2 is-inline-block"
@@ -143,7 +143,7 @@ const removeFriend = async (friendUserId) => {
                     v-for="person in people"
                     :key="person.id"
                     :value="person.id"
-                    :disabled="store.friends.some(f => f.friendUserId === person.id)"
+                    :disabled="store.friends.some(f => f.friend_id === person.id)"
                   >
                     {{ person.name }}
                   </option>
@@ -177,11 +177,11 @@ const removeFriend = async (friendUserId) => {
             </thead>
             <tbody>
               <tr v-for="friend in store.friends" :key="friend.id">
-                <td>{{ friend.name }}</td>
+                <td>{{ friend.users?.name }}</td>
                 <td>
                   <button
                     class="button is-small is-danger is-light"
-                    @click="removeFriend(friend.friendUserId)"
+                    @click="removeFriend(friend.friend_id)"
                   >
                     Remove
                   </button>

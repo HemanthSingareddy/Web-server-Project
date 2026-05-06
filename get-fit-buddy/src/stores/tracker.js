@@ -34,8 +34,8 @@ export const useTrackerStore = defineStore('tracker', {
           this.fetchExerciseTypes(),
           this.fetchActivities(),
           this.fetchFriends(),
-          this.fetchFriendFeed(),
         ])
+        await this.fetchFriendFeed()
         await this.fetchWeeklySummary(new Date().toISOString().split('T')[0])
         await this.fetchStreak()
       } catch {
@@ -257,7 +257,7 @@ export const useTrackerStore = defineStore('tracker', {
       if (!this.currentUser?.id) return { friends: [] }
       const { data: friends, error } = await supabase
         .from('friends')
-        .select('*')
+        .select('*, users!friend_id(id, name, email)')
         .eq('user_id', this.currentUser.id)
 
       if (error) throw new Error(error.message)
@@ -301,7 +301,7 @@ export const useTrackerStore = defineStore('tracker', {
 
       const { data: feed, error } = await supabase
         .from('activities')
-        .select('*, exercise_types(name)')
+        .select('*, exercise_types(name), users!user_id(name)')
         .in('user_id', friendIds)
         .order('date', { ascending: false })
         .limit(20)
@@ -352,7 +352,7 @@ export const useTrackerStore = defineStore('tracker', {
     },
 
     async fetchPeople() {
-      if (!this.currentUser?.id) return []
+      if (!this.currentUser?.id) throw new Error('Not authenticated')
       const { data: people, error } = await supabase
         .from('users')
         .select('id, name, email')
