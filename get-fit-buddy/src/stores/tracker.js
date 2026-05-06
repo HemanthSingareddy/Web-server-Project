@@ -313,7 +313,7 @@ export const useTrackerStore = defineStore('tracker', {
 
     // Users (admin)
     async fetchUsers() {
-      const { data: users, error } = await supabase.from('profiles').select('*')
+      const { data: users, error } = await supabase.from('users').select('*')
       if (error) throw new Error(error.message)
       this.users = users || []
       return { users }
@@ -321,7 +321,7 @@ export const useTrackerStore = defineStore('tracker', {
 
     async createUser(name, email, role) {
       const { data: user, error } = await supabase
-        .from('profiles')
+        .from('users')
         .insert({ name, email, role })
         .select()
         .single()
@@ -333,7 +333,7 @@ export const useTrackerStore = defineStore('tracker', {
 
     async updateUser(id, name, role) {
       const { data: user, error } = await supabase
-        .from('profiles')
+        .from('users')
         .update({ name, role })
         .eq('id', id)
         .select()
@@ -346,16 +346,17 @@ export const useTrackerStore = defineStore('tracker', {
     },
 
     async deleteUser(id) {
-      const { error } = await supabase.from('profiles').delete().eq('id', id)
+      const { error } = await supabase.from('users').delete().eq('id', id)
       if (error) throw new Error(error.message)
       this.users = this.users.filter((u) => u.id !== id)
     },
 
     async fetchPeople() {
+      if (!this.currentUser?.id) return []
       const { data: people, error } = await supabase
-        .from('profiles')
+        .from('users')
         .select('id, name, email')
-        .neq('id', this.currentUser?.id)
+        .neq('id', this.currentUser.id)
 
       if (error) throw new Error(error.message)
       return people || []
