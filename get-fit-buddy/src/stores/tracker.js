@@ -213,9 +213,12 @@ export const useTrackerStore = defineStore('tracker', {
         .lt('date', end.toISOString().split('T')[0])
 
       if (error) throw new Error(error.message)
-      const summary = activities || []
-      this.summary = summary
-      return { summary }
+      const list = activities || []
+      this.summary = {
+        total_workouts: list.length,
+        total_minutes: list.reduce((sum, a) => sum + (Number(a.duration_minutes) || 0), 0),
+      }
+      return { summary: this.summary }
     },
 
     // Streak
