@@ -3,12 +3,24 @@ import { supabase } from './supabaseClient'
 export async function loginUser(email, password) {
   const { data, error } = await supabase.auth.signInWithPassword({ email, password })
   if (error) throw new Error(error.message)
+
+  const { data: profile, error: profileError } = await supabase
+    .from('users')
+    .select('id, email, name, role')
+    .eq('id', data.user.id)
+    .maybeSingle()
+
+  if (profileError) throw new Error(profileError.message)
+  if (!profile) {
+    throw new Error('User profile row not found in users table.')
+  }
+
   return {
     user: {
-      id: data.user.id,
-      email: data.user.email,
-      name: data.user.user_metadata?.name || email,
-      role: data.user.user_metadata?.role || 'user',
+      id: profile.id,
+      email: profile.email,
+      name: profile.name,
+      role: profile.role || 'user',
     },
     token: data.session.access_token,
   }
@@ -18,62 +30,68 @@ export async function registerUser(name, email, password) {
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    options: { 
-      data: { name, role: 'user' },
-      // Disable email confirmation
-      emailRedirectTo: undefined,
+    options: {
+      data: { name },
     },
   })
+
   if (error) throw new Error(error.message)
-  
-  // Allow registration without email confirmation
-  // Even if data.session is null, we still auto-login
-  if (data.user) {
-    // Try to sign in immediately after registration
-    const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+  if (!data.user) throw new Error('Registration failed')
+
+  const { data: userRow, error: userError } = await supabase
+    .from('users')
+    .insert({
+      id: data.user.id,
       email,
-      password,
+      name,
+      role: 'user',
     })
-    
-    if (loginError) {
-      throw new Error('Account created but auto-login failed. Please log in manually.')
-    }
-    
-    return {
-      user: {
-        id: loginData.user.id,
-        email: loginData.user.email,
-        name: loginData.user.user_metadata?.name || name,
-        role: loginData.user.user_metadata?.role || 'user',
-      },
-      token: loginData.session.access_token,
-    }
+    .select('id, email, name, role')
+    .single()
+
+  if (userError) throw new Error(userError.message)
+
+  const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  })
+
+  if (loginError) throw new Error(loginError.message)
+
+  return {
+    user: {
+      id: userRow.id,
+      email: userRow.email,
+      name: userRow.name,
+      role: userRow.role || 'user',
+    },
+    token: loginData.session.access_token,
   }
-  
-  throw new Error('Registration failed')
 }
 
 export async function getCurrentUser() {
   const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
   if (sessionError) throw new Error(sessionError.message)
+  if (!sessionData.session) return null
 
-  const sessionUser = sessionData?.session?.user
-  if (!sessionUser) return null
-
-  const { data: profile, error: profileError } = await supabase
-    .from('profiles')
+  const { data: userRow, error } = await supabase
+    .from('users')
     .select('id, email, name, role')
-    .eq('id', sessionUser.id)
-    .single()
+    .eq('id', sessionData.session.user.id)
+    .maybeSingle()
 
-  if (profileError && profileError.code !== 'PGRST116') {
-    throw new Error(profileError.message)
-  }
+  if (error) throw new Error(error.message)
+  if (!userRow) return null
 
   return {
-    id: sessionUser.id,
-    email: sessionUser.email,
-    name: profile?.name || sessionUser.user_metadata?.name || sessionUser.email,
-    role: profile?.role || sessionUser.user_metadata?.role || 'user',
+    id: userRow.id,
+    email: userRow.email,
+    name: userRow.name,
+    role: userRow.role || 'user',
   }
+}
+
+export async function signOut() {
+  const { error } = await supabase.auth.signOut()
+  if (error) throw new Error(error.message)
 }
