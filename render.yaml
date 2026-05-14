@@ -4,30 +4,7 @@ services:
     buildCommand: npm install --prefix get-fit-buddy && npm run build --prefix get-fit-buddy
     staticPublishDirectory: get-fit-buddy/dist
     envVars:
-      - key: VITE_API_BASE
-        fromService:
-          name: get-fit-buddy-api
-          property: renderURL
-        appendPath: /api
-      
-  - type: web
-    name: get-fit-buddy-api
-    runtime: node
-    plan: free
-    buildCommand: npm install --prefix server
-    startCommand: npm --prefix server start
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: MONGODB_URI
+      - key: VITE_SUPABASE_URL
         sync: false
-      - key: MONGODB_DB_NAME
-        value: get_fit_buddy
-      - key: JWT_SECRET
+      - key: VITE_SUPABASE_ANON_KEY
         sync: false
-      - key: CORS_ORIGIN
-        fromService:
-          name: get-fit-buddy
-          property: renderURL
-      - key: PORT
-        value: 5173
