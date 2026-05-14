@@ -1,6 +1,8 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useInfiniteScroll } from '@vueuse/core'
 import { useTrackerStore } from '../stores/tracker'
+import FeedItemSkeleton from '../components/FeedItemSkeleton.vue'
 
 const store = useTrackerStore()
 const error = ref('')
@@ -8,6 +10,7 @@ const loading = ref(false)
 const people = ref([])
 const selectedPersonId = ref(null)
 const tab = ref('feed') // 'feed' or 'add'
+const feedContainer = ref(null)
 
 onMounted(async () => {
   try {
@@ -17,6 +20,15 @@ onMounted(async () => {
     error.value = 'Failed to load friends data'
   }
 })
+
+// Set up infinite scroll on the feed container
+useInfiniteScroll(
+  feedContainer,
+  () => {
+    store.fetchMoreFriendFeed()
+  },
+  { distance: 100 }
+)
 
 const loadPeopleList = async () => {
   if (people.value.length > 0) return
@@ -40,6 +52,9 @@ const addFriend = async () => {
     selectedPersonId.value = null
     people.value = []
     await loadPeopleList()
+    // Reset feed for new friend
+    store.feedOffset = 0
+    store.feedHasMore = true
     await store.fetchFriendFeed()
   } catch (err) {
     error.value = err.message || 'Failed to add friend'
@@ -52,6 +67,9 @@ const removeFriend = async (friendUserId) => {
   if (!confirm('Remove this friend?')) return
   try {
     await store.removeFriend(friendUserId)
+    // Reset feed after removing friend
+    store.feedOffset = 0
+    store.feedHasMore = true
     await store.fetchFriendFeed()
   } catch (err) {
     error.value = 'Failed to remove friend'
@@ -97,12 +115,20 @@ const removeFriend = async (friendUserId) => {
         </div>
       </div>
 
-      <div class="box">
+      <div class="box" ref="feedContainer">
         <h3 class="title is-5">Friend Feed</h3>
-        <div v-if="store.feed.length === 0" class="notification is-light">
+
+        <!-- Item counter -->
+        <p v-if="store.feed.length > 0" class="mb-4 has-text-grey-light">
+          <small>Showing {{ store.feed.length }} of {{ store.feedTotal || '?' }} workouts</small>
+        </p>
+
+        <!-- Empty state -->
+        <div v-if="store.feed.length === 0 && !store.feedLoading" class="notification is-light">
           Your friends haven't logged any workouts recently.
         </div>
 
+        <!-- Feed items -->
         <article v-for="activity in store.feed" :key="activity.id" class="box">
           <div class="media">
             <div class="media-content">
@@ -125,6 +151,28 @@ const removeFriend = async (friendUserId) => {
             </div>
           </div>
         </article>
+
+                <!-- Loading skeleton placeholders -->
+        <transition name="fade">
+          <div v-if="store.feedLoading" class="skeleton-container">
+            <FeedItemSkeleton v-for="i in 3" :key="'skeleton-' + i" />
+          </div>
+        </transition>
+
+        <!-- All loaded message -->
+        <div v-if="!store.feedHasMore && store.feed.length > 0" class="notification is-light mt-4">
+          <strong>All workouts loaded!</strong>
+        </div>
+
+        <!-- Loading indicator text at bottom -->
+        <div v-if="store.feedLoading" class="has-text-centered mt-4">
+          <p class="has-text-grey-light">
+            <span class="icon">
+              <i class="fas fa-spinner fa-spin"></i>
+            </span>
+            Loading more workouts...
+          </p>
+        </div>
       </div>
     </div>
 
@@ -194,3 +242,17 @@ const removeFriend = async (friendUserId) => {
     </div>
   </div>
 </template>
+<style scoped>
+.skeleton-container {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+</style>

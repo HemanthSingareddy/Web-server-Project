@@ -8,7 +8,6 @@ const SESSION_MARKER_KEY = 'hasSession'
 export const useTrackerStore = defineStore('tracker', {
   state: () => ({
     currentUser: null,
-    // Token is held in memory only; Supabase manages session persistence internally
     token: null,
     hasSession: !!localStorage.getItem(SESSION_MARKER_KEY),
     users: [],
@@ -16,6 +15,11 @@ export const useTrackerStore = defineStore('tracker', {
     activities: [],
     friends: [],
     feed: [],
+    feedOffset: 0,
+    feedItemsPerPage: 10,
+    feedTotal: 0,
+    feedHasMore: true,
+    feedLoading: false,
     summary: null,
     streak: 0,
   }),
@@ -27,21 +31,28 @@ export const useTrackerStore = defineStore('tracker', {
 
   actions: {
     async bootstrap() {
-      if (!this.hasSession) return
-      try {
-        await this.fetchMe()
-        await Promise.all([
-          this.fetchExerciseTypes(),
-          this.fetchActivities(),
-          this.fetchFriends(),
-        ])
-        await this.fetchFriendFeed()
-        await this.fetchWeeklySummary(new Date().toISOString().split('T')[0])
-        await this.fetchStreak()
-      } catch {
-        // Silent catch - let individual endpoints handle errors
-      }
-    },
+  if (!this.hasSession) return
+  
+  // Reset feed state on bootstrap
+  this.feedOffset = 0
+  this.feedTotal = 0
+  this.feedHasMore = true
+  this.feedLoading = false
+  
+  try {
+    await this.fetchMe()
+    await Promise.all([
+      this.fetchExerciseTypes(),
+      this.fetchActivities(),
+      this.fetchFriends(),
+    ])
+    await this.fetchFriendFeed()
+    await this.fetchWeeklySummary(new Date().toISOString().split('T')[0])
+    await this.fetchStreak()
+  } catch {
+    // Silent catch - let individual endpoints handle errors
+  }
+},
 
     async register(name, email, password) {
       const data = await registerUser(name, email, password)
@@ -85,6 +96,10 @@ export const useTrackerStore = defineStore('tracker', {
       this.activities = []
       this.friends = []
       this.feed = []
+      this.feedOffset = 0           
+      this.feedTotal = 0           
+      this.feedHasMore = true      
+      this.feedLoading = false     
       this.summary = null
       this.streak = 0
       localStorage.removeItem(SESSION_MARKER_KEY)
@@ -291,25 +306,64 @@ export const useTrackerStore = defineStore('tracker', {
     },
 
     // Feed
-    async fetchFriendFeed() {
+    async fetchFriendFeed(offset=0) {
       if (!this.currentUser?.id) return { feed: [] }
       const friendIds = this.friends.map((f) => f.friend_id)
       if (friendIds.length === 0) {
         this.feed = []
+        this.feedTotal = 0  
+        this.feedHasMore = false
         return { feed: [] }
       }
 
-      const { data: feed, error } = await supabase
-        .from('activities')
-        .select('*, exercise_types(name), users!user_id(name)')
-        .in('user_id', friendIds)
-        .order('date', { ascending: false })
-        .limit(20)
+      try{
+        this.feedLoading = true
+        const itemsPerPage = this.feedItemsPerPage
+        const endIndex = offset + itemsPerPage - 1
+        const { data: feed, error, count } = await supabase
+          .from('activities')
+          .select('*, exercise_types(name), users!user_id(name)', { count: 'exact' })
+          .in('user_id', friendIds)
+          .order('date', { ascending: false })
+          .range(offset, endIndex)
 
-      if (error) throw new Error(error.message)
-      this.feed = feed || []
-      return { feed }
+          if (error) throw new Error(error.message)
+            if(offset === 0) {
+              this.feed = feed || []
+            } else{
+              this.feed.push(...(feed || []))
+            }
+            this.feedTotal = count || 0
+            this.feedHasMore = (feed?.length ||0) === itemsPerPage
+            this.feedLoading = false
+            return { feed }
+      }
+      catch(error){
+        this.feedLoading = false
+        throw error
+      }
+
     },
+
+    async fetchMoreFriendFeed() {
+  // Check if already loading or no more items to load
+  if (this.feedLoading || !this.feedHasMore) {
+    return
+  }
+
+  try {
+
+    const newOffset = this.feedOffset + this.feedItemsPerPage
+
+    await this.fetchFriendFeed(newOffset)
+
+    // Update the offset
+    this.feedOffset = newOffset
+  } catch (error) {
+    console.error('Failed to fetch more friend feed items:', error)
+    throw error
+  }
+},
 
     // Users (admin)
     async fetchUsers() {
