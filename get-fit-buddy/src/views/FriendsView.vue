@@ -15,7 +15,7 @@ const feedContainer = ref(null)
 onMounted(async () => {
   try {
     await store.fetchFriends()
-    await store.fetchFriendFeed()
+    await store.fetchFriendFeed(0)
   } catch (err) {
     error.value = 'Failed to load friends data'
   }
@@ -55,7 +55,7 @@ const addFriend = async () => {
     // Reset feed for new friend
     store.feedOffset = 0
     store.feedHasMore = true
-    await store.fetchFriendFeed()
+    await store.fetchFriendFeed(0)
   } catch (err) {
     error.value = err.message || 'Failed to add friend'
   } finally {
@@ -70,7 +70,7 @@ const removeFriend = async (friendUserId) => {
     // Reset feed after removing friend
     store.feedOffset = 0
     store.feedHasMore = true
-    await store.fetchFriendFeed()
+    await store.fetchFriendFeed(0)
   } catch (err) {
     error.value = 'Failed to remove friend'
   }
@@ -120,7 +120,7 @@ const removeFriend = async (friendUserId) => {
 
         <!-- Item counter -->
         <p v-if="store.feed.length > 0" class="mb-4 has-text-grey-light">
-          <small>Showing {{ store.feed.length }} of {{ store.feedTotal || '?' }} workouts</small>
+          <small>Showing {{ store.feed.length }} of {{ store.feedTotal }} workouts</small>
         </p>
 
         <!-- Empty state -->
@@ -152,12 +152,10 @@ const removeFriend = async (friendUserId) => {
           </div>
         </article>
 
-                <!-- Loading skeleton placeholders -->
-        <transition name="fade">
-          <div v-if="store.feedLoading" class="skeleton-container">
-            <FeedItemSkeleton v-for="i in 3" :key="'skeleton-' + i" />
-          </div>
-        </transition>
+        <!-- Loading skeleton placeholders -->
+        <div v-if="store.feedLoading">
+          <FeedItemSkeleton v-for="i in 3" :key="'skeleton-' + i" />
+        </div>
 
         <!-- All loaded message -->
         <div v-if="!store.feedHasMore && store.feed.length > 0" class="notification is-light mt-4">
