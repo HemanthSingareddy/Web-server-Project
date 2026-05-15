@@ -313,6 +313,7 @@ export const useTrackerStore = defineStore('tracker', {
         this.feed = []
         this.feedTotal = 0  
         this.feedHasMore = false
+        this.feedLoading = false
         return { feed: [] }
       }
 
